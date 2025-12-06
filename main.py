@@ -10,76 +10,102 @@ class CacheCompartilhada:
         self.tamanho_linha = tamanho_linha
         
 class CachePrivada:
-    def __init__(self, tamanho_linha: int, num_linhas: int):
+    def __init__(self, id: int, tamanho_linha: int, num_linhas: int):
         self.tamanho_linha = tamanho_linha
-        self.cache_instrucao = [None] * (num_linhas // 2)
-        self.cache_dados = [None] * (num_linhas // 2)
+        self.cache_instrucao = [(None, "I")] * (num_linhas)
+        self.cache_dados = [(None, "I")] * (num_linhas)
         self.id = id
 
-    def seleciona_instrucao(self, instrucao: int, endereco: str):
-        match instrucao:
-            case 0:
-                pass
-            case 2:
-                pass
-            case 3:
-                pass
-            case _:
-                raise ValueError("Instrução inválida")
-
-    def leitura_instrucao(endereco)
-
-def le_configuracoes(arq_config):
-    tam_linhas_cache = int(arq_config.readline().strip())
-    num_linhas_cache_compartilhada = int(arq_config.readline().strip())
-    num_linhas_cache_privada = int(arq_config.readline().strip())
-    num_processadores = int(arq_config.readline().strip())
+def le_configuracoes(arq_config):    
+    tam_linha = int(arq_config.readline().strip())
+    n_linhas_cache_compartilhada = int(arq_config.readline().strip())
+    n_linhas_cache_privada = int(arq_config.readline().strip())
+    n_processadores = int(arq_config.readline().strip())
     politica = arq_config.readline().strip()
-    arq_config.close()
     
-    return tam_linhas_cache, num_linhas_cache_compartilhada, num_linhas_cache_privada, num_processadores, politica
+    return (tam_linha, n_linhas_cache_compartilhada, n_linhas_cache_privada, n_processadores, politica)
 
 def trata_instrucoes(arq_instrucoes):
     instrucoes_lst = []
-    for linha in instrucoes:
+    for linha in arq_instrucoes:
         partes = linha.strip().split()
         id_processador = int(partes[0])
         operacao = int(partes[1])
         endereco = partes[2]
         instrucoes_lst.append((id_processador, operacao, endereco))
-    instrucoes.close()
+    arq_instrucoes.close()
     return instrucoes_lst
 
-def protocolo_msi(instrucoes: list[tuple(int, int, str)], caches_privadas: list[CachePrivada], cache_compartilhada: CacheCompartilhada):
+def imprimirCaches(caches_privadas: list[CachePrivada], cache_compartilhada: CacheCompartilhada):
+    print("="* 6, "Caches Privadas", "="*6)
+    for cache_privada in caches_privadas:
+        print(f"\nProcessador {cache_privada.id}:")
+        print("-"*5, "Instruções", "-"*5)
+        print("\tBloco\tEstado")
+
+        for i in range(len(cache_privada.cache_instrucao)):
+            print(f"Linha {i}: {cache_privada.cache_instrucao[i][0]}\t{cache_privada.cache_instrucao[i][1]}")
+        print("-"*5, "Dados", "-"*5)
+        print("\tBloco\tEstado")
+
+        for i in range(len(cache_privada.cache_dados)):
+            print(f"Linha {i} {cache_privada.cache_dados[i][0]}\t{cache_privada.cache_dados[i][1]}")
+            
+    print("\nCache Compartilhada:")
+    for i in range(len(cache_compartilhada.cache)):
+        print(f"Linha {i}: {cache_compartilhada.cache[i]}")
+
+def protocolo_msi(instrucoes: list[tuple], caches_privadas: list[CachePrivada], cache_compartilhada: CacheCompartilhada):
     for instrucao in instrucoes:
         id, operacao, endereco = instrucao
-        cache_privada = caches_privadas[id]
+        print(f"\nOperação: {id}, {operacao}, {endereco}")
         match operacao:
             case 0:
-                pass
+                print("Leitura de instrução\n")
+            case 2:
+                print("Leitura de dado\n")
+            case 3:
+                print("Escrita de dado\n")
+            case _:
+                raise ValueError("Instrução inválida")
+        imprimirCaches(caches_privadas, cache_compartilhada)
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-arquivo', help='nome do arquivo de configuração')
+    parser.add_argument('-config', help='nome do arquivo de entrada')
+    args = parser.parse_args()
+
     try:
-        parser = argparse.ArgumentParser()
-        parser.add_argument('-arquivo', dest='arq_entrada', help='nome do arquivo de entrada')
-        parser.add_argument('-config', dest='arq_config', help='nome do arquivo de configuração')
-        args = parser.parse_args()
-        arquivo_entrada = args.arq_entrada
-        arquivo_config = args.arq_config
-
-        instrucoes = open(arquivo_entrada, 'r')
-        instrucoes_lst = trata_instrucoes(instrucoes)
-
-        try:
-            configuracoes = open(arquivo_config, 'r')
-            tam_linhas_cache, num_linhas_cache_compartilhada, num_linhas_cache_privada, num_processadores, politica = le_configuracoes(configuracoes)
-        except FileNotFoundError:
-            print("Arquivo de configuração não encontrado.")
-            return
-
+        with open(args.config, 'r') as f:
+            (tam_linha, n_linhas_cache_compartilhada, n_linhas_cache_privada, n_processadores, politica) = le_configuracoes(f)
+            
+            print("Configurações Lidas:")
+            print(f"Mapeamento: Associativo")
+            print(f"Tamanho linha: {tam_linha}")
+            print(f"L2: {n_linhas_cache_compartilhada} linhas")
+            print(f"L1: {n_linhas_cache_privada} linhas")
+            print(f"Número de processadores: {n_processadores}")
+            print(f"Política de substituição: {politica}")
+            
     except FileNotFoundError:
-        print("Arquivo de entrada não encontrado.")
+        print(f"Erro: Arquivo {args.config} não encontrado.")
         return
+
+    # inicializa caches
+    cache_compartilhada = CacheCompartilhada(tam_linha, n_linhas_cache_compartilhada)
+    caches_privadas = [CachePrivada(i, tam_linha, n_linhas_cache_privada) for i in range(n_processadores)]
+
+    # le instrucoes
+    try:
+        with open(args.arquivo, 'r') as f:
+            lista_instrucoes = trata_instrucoes(f)
+    except FileNotFoundError:
+        print(f"Erro: Arquivo {args.arquivo} não encontrado.")
+        return
+
+    # executa o simulador
+    protocolo_msi(lista_instrucoes, caches_privadas, cache_compartilhada)
 
 if __name__ == "__main__":
     main()
