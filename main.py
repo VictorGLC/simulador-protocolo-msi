@@ -167,12 +167,12 @@ def protocolo_msi(instrucoes: list[tuple[int, int, str]], caches_privadas: list[
                 raise ValueError("Instrução inválida")
         imprimirCaches(caches_privadas, cache_compartilhada, arquivo_saida)
 
-    for vizinho in caches_privadas:
-        arquivo_saida.write(f"\n[ Estatísticas do Processador {vizinho.id} ]\n")
-        arquivo_saida.write(f"Total de hits na Cache de Instrucao: {vizinho.hit_instrucao}\n")
-        arquivo_saida.write(f"Total de miss na Cache de Instrucao: {vizinho.miss_instrucao}\n")
-        arquivo_saida.write(f"Total de hits na Cache de Dados: {vizinho.hit_dados}\n")
-        arquivo_saida.write(f"Total de miss na Cache de Dados: {vizinho.miss_dados}\n")
+    for cache_privada in caches_privadas:
+        arquivo_saida.write(f"\n[ Estatísticas do Processador {cache_privada.id} ]\n")
+        arquivo_saida.write(f"Total de hits na Cache de Instrucao: {cache_privada.hit_instrucao}\n")
+        arquivo_saida.write(f"Total de miss na Cache de Instrucao: {cache_privada.miss_instrucao}\n")
+        arquivo_saida.write(f"Total de hits na Cache de Dados: {cache_privada.hit_dados}\n")
+        arquivo_saida.write(f"Total de miss na Cache de Dados: {cache_privada.miss_dados}\n")
     arquivo_saida.write(f"\n[ Estatísticas da Cache Compartilhada ]\n")
     arquivo_saida.write(f"Total de hits: {cache_compartilhada.hit}\n")
     arquivo_saida.write(f"Total de miss: {cache_compartilhada.miss}")
