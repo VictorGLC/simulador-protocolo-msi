@@ -1,0 +1,336 @@
+Arquivo de Entrada:
+==================
+1 0 b8590400
+1 2 20550110
+0 2 20550111
+0 3 20550111
+==================
+
+Arquivo de saída:
+======================
+Configurações
+Mapeamento: Associativo por conjuto
+Tamanho da linha: 16
+Linhas por conjunto(cache compartilhada): 4
+Numero de conjuntos(cache compartilhada): 4
+Linhas por conjunto(caches privadas): 2
+Numero de conjuntos(caches privadas): 2
+Numero de processadores: 2
+
+
+>>>>>>>>>> Operação: 1 0 b8590400 (bloco b859040)
+>>>>>>>>>> Mensagem: Read Miss 
+===================== Cache compartilhada =====================
+            
+=======Conjunto0=======
+             Bloco      
+Linha0      b859040
+Linha1      
+Linha2      
+Linha3      
+=======Conjunto1=======
+             Bloco
+Linha0      
+Linha1      
+Linha2      
+Linha3
+=======Conjunto2=======
+             Bloco
+Linha0      
+Linha1      
+Linha2      
+Linha3
+=======Conjunto3=======
+             Bloco
+Linha0      
+Linha1      
+Linha2      
+Linha3
+
+===================== Caches privadas =====================
+
+==============Processador 0=============
+--------------    Instrucoes   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+--------------    Dados   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I      
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+
+==============Processador 1==============
+--------------    Instrucoes   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0      b859040        E
+Linha1                     I             
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+--------------    Dados   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+    
+
+>>>>>>>>>> Operação: 1 2 20550110 (bloco 2055011)
+>>>>>>>>>> Mensagem: Read Miss 
+===================== Cache compartilhada =====================
+            
+=======Conjunto0=======
+             Bloco      
+Linha0      b859040
+Linha1      
+Linha2      
+Linha3      
+=======Conjunto1=======
+             Bloco
+Linha0      2055011
+Linha1      
+Linha2      
+Linha3
+=======Conjunto2=======
+             Bloco
+Linha0      
+Linha1      
+Linha2      
+Linha3
+=======Conjunto3=======
+             Bloco
+Linha0      
+Linha1      
+Linha2      
+Linha3
+
+===================== Caches privadas =====================
+
+==============Processador 0=============
+--------------    Instrucoes   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+--------------    Dados   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I      
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+
+==============Processador 1==============
+--------------    Instrucoes   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0      b859040        E
+Linha1                     I             
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+--------------    Dados   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0      2055011        E
+Linha1                     I
+
+>>>>>>>>>> Operação: 0 2 20550111 (bloco 2055011)
+>>>>>>>>>> Mensagem: Read Miss 
+===================== Cache compartilhada =====================
+            
+=======Conjunto0=======
+             Bloco      
+Linha0      b859040
+Linha1      
+Linha2      
+Linha3      
+=======Conjunto1=======
+             Bloco
+Linha0      2055011
+Linha1      
+Linha2      
+Linha3
+=======Conjunto2=======
+             Bloco
+Linha0      
+Linha1      
+Linha2      
+Linha3
+=======Conjunto3=======
+             Bloco
+Linha0      
+Linha1      
+Linha2      
+Linha3
+
+===================== Caches privadas =====================
+
+==============Processador 0=============
+--------------    Instrucoes   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+--------------    Dados   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I      
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0      2055011        S
+Linha1                     I
+
+==============Processador 1==============
+--------------    Instrucoes   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0      b859040        E
+Linha1                     I             
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+--------------    Dados   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0      2055011        S
+Linha1                     I
+
+>>>>>>>>>> Operação: 0 3 20550111 (bloco 2055011)
+>>>>>>>>>> Mensagem: Invalidate 
+===================== Cache compartilhada =====================
+            
+=======Conjunto0=======
+             Bloco      
+Linha0      b859040
+Linha1      
+Linha2      
+Linha3      
+=======Conjunto1=======
+             Bloco
+Linha0      2055011
+Linha1      
+Linha2      
+Linha3
+=======Conjunto2=======
+             Bloco
+Linha0      
+Linha1      
+Linha2      
+Linha3
+=======Conjunto3=======
+             Bloco
+Linha0      
+Linha1      
+Linha2      
+Linha3
+
+===================== Caches privadas =====================
+
+==============Processador 0=============
+--------------    Instrucoes   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0                     I             
+Linha1                     I
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+--------------    Dados   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I      
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0      2055011        M
+Linha1                     I
+
+==============Processador 1==============
+--------------    Instrucoes   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0      b859040        E
+Linha1                     I             
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+--------------    Dados   --------------
+=======Conjunto0=======
+             Bloco      Estado
+Linha0                     I
+Linha1                     I
+     
+=======Conjunto1=======
+             Bloco      Estado
+Linha0      2055011        I
+Linha1                     I
+
+===================== FIM DE EXECUCAO ====================
+Total de miss na Cache de Instrucao do processador 0: 0
+Total de hit na Cache de Instrucao do processador 0: 0
+Total de miss na Cache de Dados do processador 0: 1
+Total de hit na Cache de dados do processador 0: 1
+
+Total de miss na Cache de Instrucao do processador 1: 1
+Total de hit na Cache de Instrucao do processador 1: 0
+Total de miss na Cache de Dados do processador 0: 1
+Total de hit na Cache de dados do processador 0: 0
+
+Total de hit na cache compartilhada: 2
+Total de miss na cache compartilhada: 2
+
+

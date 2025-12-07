@@ -1,0 +1,207 @@
+Configurações Lidas
+Mapeamento Associativo
+Tamanho linha: 16
+L2: 8 linhas
+L1: 4 linhas
+Número de processadores: 2
+Política de substituição: lru
+
+Operação: 1, 0, b8590400
+Processador 1 lê instrução no endereço b8590400
+
+============================== Caches Privadas ==============================
+
+[ Processador 0 ]
+---------- Instruções ----------
+Linha    Bloco                Estado  
+0                             I       
+1                             I       
+2                             I       
+3                             I       
+
+------------ Dados -------------
+Linha    Bloco                Estado  
+0                             I       
+1                             I       
+2                             I       
+3                             I       
+
+[ Processador 1 ]
+---------- Instruções ----------
+Linha    Bloco                Estado  
+0        b8590400             S       
+1                             I       
+2                             I       
+3                             I       
+
+------------ Dados -------------
+Linha    Bloco                Estado  
+0                             I       
+1                             I       
+2                             I       
+3                             I       
+
+=========================== Cache Compartilhada ===========================
+Linha    Bloco               
+0        b8590400            
+1                            
+2                            
+3                            
+4                            
+5                            
+6                            
+7                            
+
+Operação: 1, 2, 20550110
+Processador 1 lê dado no endereço 20550110
+
+============================== Caches Privadas ==============================
+
+[ Processador 0 ]
+---------- Instruções ----------
+Linha    Bloco                Estado  
+0                             I       
+1                             I       
+2                             I       
+3                             I       
+
+------------ Dados -------------
+Linha    Bloco                Estado  
+0                             I       
+1                             I       
+2                             I       
+3                             I       
+
+[ Processador 1 ]
+---------- Instruções ----------
+Linha    Bloco                Estado  
+0        b8590400             S       
+1                             I       
+2                             I       
+3                             I       
+
+------------ Dados -------------
+Linha    Bloco                Estado  
+0                             I       
+1                             I       
+2                             I       
+3                             I       
+
+=========================== Cache Compartilhada ===========================
+Linha    Bloco               
+0        b8590400            
+1                            
+2                            
+3                            
+4                            
+5                            
+6                            
+7                            
+
+Operação: 0, 2, 20550111
+Processador 0 lê dado no endereço 20550111
+
+============================== Caches Privadas ==============================
+
+[ Processador 0 ]
+---------- Instruções ----------
+Linha    Bloco                Estado  
+0                             I       
+1                             I       
+2                             I       
+3                             I       
+
+------------ Dados -------------
+Linha    Bloco                Estado  
+0                             I       
+1                             I       
+2                             I       
+3                             I       
+
+[ Processador 1 ]
+---------- Instruções ----------
+Linha    Bloco                Estado  
+0        b8590400             S       
+1                             I       
+2                             I       
+3                             I       
+
+------------ Dados -------------
+Linha    Bloco                Estado  
+0                             I       
+1                             I       
+2                             I       
+3                             I       
+
+=========================== Cache Compartilhada ===========================
+Linha    Bloco               
+0        b8590400            
+1                            
+2                            
+3                            
+4                            
+5                            
+6                            
+7                            
+
+Operação: 0, 3, 20550111
+Processador 0 escreve dado no endereço 20550111
+
+============================== Caches Privadas ==============================
+
+[ Processador 0 ]
+---------- Instruções ----------
+Linha    Bloco                Estado  
+0                             I       
+1                             I       
+2                             I       
+3                             I       
+
+------------ Dados -------------
+Linha    Bloco                Estado  
+0                             I       
+1                             I       
+2                             I       
+3                             I       
+
+[ Processador 1 ]
+---------- Instruções ----------
+Linha    Bloco                Estado  
+0        b8590400             S       
+1                             I       
+2                             I       
+3                             I       
+
+------------ Dados -------------
+Linha    Bloco                Estado  
+0                             I       
+1                             I       
+2                             I       
+3                             I       
+
+=========================== Cache Compartilhada ===========================
+Linha    Bloco               
+0        b8590400            
+1                            
+2                            
+3                            
+4                            
+5                            
+6                            
+7                            
+
+[ Estatísticas do Processador 0 ]
+Total de hits na Cache de Instrucao: 0
+Total de miss na Cache de Instrucao: 0
+Total de hits na Cache de Dados: 0
+Total de miss na Cache de Dados: 0
+
+[ Estatísticas do Processador 1 ]
+Total de hits na Cache de Instrucao: 0
+Total de miss na Cache de Instrucao: 1
+Total de hits na Cache de Dados: 0
+Total de miss na Cache de Dados: 0
+
+[ Estatísticas da Cache Compartilhada ]
+Total de hits: 0
+Total de miss: 1
