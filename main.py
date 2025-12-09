@@ -1,9 +1,6 @@
 import argparse
 import math
 
-# class MemoriaPrincipal:
-#     def __init__(self):
-#         pass
 
 class CacheCompartilhada:
     def __init__(self, tamanho_linha: int, num_linhas: int):
@@ -12,18 +9,30 @@ class CacheCompartilhada:
         self.hit = 0
         self.miss = 0
 
-    def alocar(self, tag: str):
+    def alocar(self, tag: str, politica: str):
         """aloca uma nova tag na cache compartilhada"""
 
         if tag in self.cache:
-            return  # já está na cache
+            if politica == 'lru':
+                self.cache.remove(tag)
+                adiciona_fim(self.cache, tag)
+            return
 
         for i in range(len(self.cache)):
             if self.cache[i] is None:
                 self.cache[i] = tag
                 return
 
-        # implementar politica de substituicao
+        self.substituicao(tag, politica)
+
+    def substituicao(self, tag, politica):
+        if politica == "lru" or politica == "fifo":
+            self.cache.pop(0)
+            self.cache.append(tag)
+        else:
+            raise ValueError("Politica de substituição não comportada, tente 'lru' ou 'fifo'")
+
+
         
 class CachePrivada:
     def __init__(self, id: int, tamanho_linha: int, num_linhas: int):
@@ -56,33 +65,89 @@ class CachePrivada:
                 return estado # retorna 'S' ou 'M'
         return None # miss
 
-    def atualizar_linha(self, operacao: int, tag: str, novo_estado: str):
-        """insere uma nova tag ou atualiza o estado de uma existente"""
+    def atualizar_linha(self, operacao: int, tag: str, novo_estado: str, politica: str, cache_compartilhada: CacheCompartilhada):
+        """insere uma nova tag ou atualiza o estado de uma linha existente"""
 
         cache = self._get_cache(operacao)
         
-        # se existe apenas atualiza o estado
+        # se existe, e está válido, apenas atualiza o estado
         for i in range(len(cache)):
             if cache[i][0] == tag:
-                cache[i] = (tag, novo_estado)
-                return
+                if cache[i][1] != "I":
+                    if novo_estado == "I":
+                        cache[i] = (tag, novo_estado)
+                    else:
+                        self.atualiza_estado(tag, cache, politica, novo_estado, i)
+                    return
+                else:
+                    cache.pop(i)
+                    adiciona_fim_tupla(cache, (tag, novo_estado))
+                    return
+
 
         # se não existe procura estado invalido
         for i in range(len(cache)):
             if cache[i][1] == 'I':
-                cache[i] = (tag, novo_estado)
+                cache.pop(i)
+                adiciona_fim_tupla(cache, (tag, novo_estado))
                 return
 
         # implementar politica de substituicao
+        self.substituicao(tag, cache, politica, novo_estado, cache_compartilhada)
+        return
+
+    def substituicao(self, tag: str, cache: list[tuple[str, str]], politica: str, novo_estado: str, cache_compartilhada: CacheCompartilhada):
+        '''Realiza a substituicao de uma linha a partir da politica de substituicao e atualiza a cache compartilhada'''
+        assert len(cache) > 0 
+        if politica == "lru" or politica == "fifo":
+            antigo = cache.pop(0)
+            cache.append((tag, novo_estado))
+            if antigo[1] == "M":
+                if antigo[0] in cache_compartilhada.cache:
+                    cache_compartilhada.hit += 1
+                else: 
+                    cache_compartilhada.miss += 1
+                cache_compartilhada.alocar(antigo[0], politica)
+                
+        else:
+            raise ValueError("Politica de substituição não comportada, tente 'lru' ou 'fifo'")
+
+    def atualiza_estado(self, tag: str, cache: list[tuple[str, str]], politica: str, novo_estado: str, i: int):
+        '''Atualiza o estado e o coloca na posição correta de acordo com o algoritmo de substituição'''
+        match politica:
+            case 'lru':
+                cache.pop(i)
+                adiciona_fim_tupla(cache, (tag, novo_estado))
+            case 'fifo':
+                cache[i] = (tag, novo_estado)
+            case _:
+                raise ValueError("Politica de substituição não comportada, tente 'lru' ou 'fifo'")
 
 def calcular_tag(endereco_hex: str, tamanho_linha: int) -> str:
     """retorna a tag do endereco removendo os bits de offset baseados no tamanho da linha"""
 
     endereco_int = int(endereco_hex, 16)
-    bits_offset = int(math.log2(tamanho_linha))
-    tag = endereco_int >> bits_offset
+    if endereco_int > 2 ** 32:
+        raise ValueError("Numero de endereço maior que suportado pelo barramento")
+    tag = math.floor(endereco_int / tamanho_linha)
+    
     
     return hex(tag)[2:]
+
+def adiciona_fim(lst, elemento):
+    for i in range(len(lst)):
+        if lst[i] is None:
+            lst.insert(i, elemento)
+            return
+    lst.append(elemento)
+
+def adiciona_fim_tupla(lst: list[tuple[str, str]], elemento: tuple[str, str]):
+    for i in range(len(lst)):
+        if lst[i][0] is None:
+            lst.insert(i, elemento)
+            return
+    lst.append(elemento)
+
 
 def le_configuracoes(arq_config):
     """lê as configurações do arquivo e retorna uma tupla com os valores""" 
@@ -180,7 +245,7 @@ def imprimirCaches(caches_privadas: list[CachePrivada], cache_compartilhada: Cac
             
             arquivo_saida.write(f"{i:<{W_LINHA}} {bloco_str:<{W_BLOCO}} {estado:<{W_ESTADO}}\n")
 
-def protocolo_msi(instrucoes: list[tuple[int, int, str]], caches_privadas: list[CachePrivada], cache_compartilhada: CacheCompartilhada, arquivo_saida):
+def protocolo_msi(instrucoes: list[tuple[int, int, str]], caches_privadas: list[CachePrivada], cache_compartilhada: CacheCompartilhada, politica: str, arquivo_saida):
     for instrucao in instrucoes:
         processador, operacao, endereco = instrucao
 
@@ -192,37 +257,36 @@ def protocolo_msi(instrucoes: list[tuple[int, int, str]], caches_privadas: list[
                 arquivo_saida.write(f"Processador {processador} lê instrução em {endereco}\n")
                 
                 if caches_privadas[processador].buscar(operacao, tag) is not None: # busca na l1 de instrucao
-                    caches_privadas[processador].atualizar_linha(operacao, tag, 'S') # atualiza estado para 'S'
+                    arquivo_saida.write(f"Mensagem: Read Hit \n")
                     caches_privadas[processador].hit_instrucao += 1
                 else:
                     caches_privadas[processador].miss_instrucao += 1
-                    
+                    arquivo_saida.write(f"Mensagem: Read Miss \n")
                     # busca direto na cache compartilhada
                     if tag in cache_compartilhada.cache:
                         cache_compartilhada.hit += 1 # hit na cache compartilhada
                     else:
                         cache_compartilhada.miss += 1 # miss na cache compartilhada
-                        cache_compartilhada.alocar(tag) # insere na cache compartilhada, simula trazer da memória principal
+                        cache_compartilhada.alocar(tag, politica) # insere na cache compartilhada, simula trazer da memória principal
 
-                    caches_privadas[processador].atualizar_linha(operacao, tag, 'S') # insere na cache de instrucao
+                    caches_privadas[processador].atualizar_linha(operacao, tag, 'S', politica, cache_compartilhada) # insere na cache de instrucao
                     
             case 2:
                 arquivo_saida.write(f"Processador {processador} lê dado em {endereco}\n")
 
                 if caches_privadas[processador].buscar(operacao, tag) is not None: # busca na l1 de dados
-                    caches_privadas[processador].atualizar_linha(operacao, tag, 'S')
                     caches_privadas[processador].hit_dados += 1
+                    arquivo_saida.write(f"Mensagem: Read Hit \n")
                 else:
                     caches_privadas[processador].miss_dados += 1
-
+                    arquivo_saida.write(f"Mensagem: Read Miss \n")
                     veio_do_vizinho = False
                     for vizinho in caches_privadas:
                         if vizinho.id != processador:
                             estado = vizinho.buscar(operacao, tag) # busca na l1 de dados do vizinho
                             
-                            if estado == 'M': # se for M precisa fazer write-back na l2
-                                cache_compartilhada.alocar(tag) # vizinho faz write-back na l2
-                                vizinho.atualizar_linha(operacao, tag, 'S') # vizinho vira shared
+                            if estado == 'M': 
+                                vizinho.atualizar_linha(operacao, tag, 'S', politica, cache_compartilhada) # vizinho vira shared
                                 veio_do_vizinho = True
                                 arquivo_saida.write(f"Snooping: Vizinho {vizinho.id} 'M' -> 'S'\n")
                     
@@ -232,16 +296,18 @@ def protocolo_msi(instrucoes: list[tuple[int, int, str]], caches_privadas: list[
                             cache_compartilhada.hit += 1
                         else:
                             cache_compartilhada.miss += 1
-                            cache_compartilhada.alocar(tag)
+                            cache_compartilhada.alocar(tag, politica)
 
-                    caches_privadas[processador].atualizar_linha(operacao, tag, 'S')
+                    caches_privadas[processador].atualizar_linha(operacao, tag, 'S', politica, cache_compartilhada)
             case 3:
                 arquivo_saida.write(f"Processador {processador} escreve dado em {endereco}\n")
 
                 if caches_privadas[processador].buscar(operacao, tag) is not None:
                     caches_privadas[processador].hit_dados += 1
+                    arquivo_saida.write(f"Mensagem: Write Hit \n")
                 else:
                     caches_privadas[processador].miss_dados += 1
+                    arquivo_saida.write(f"Mensagem: Write Miss \n")
 
                 # snooping (invalidate)
                 for vizinho in caches_privadas:
@@ -249,20 +315,25 @@ def protocolo_msi(instrucoes: list[tuple[int, int, str]], caches_privadas: list[
                         estado_vizinho = vizinho.buscar(operacao, tag)
                         if estado_vizinho is not None:
                             if estado_vizinho == 'M': # se vizinho tinha dado modificado, precisa salvar na l2 antes de invalidar
-                                cache_compartilhada.alocar(tag) # write-back na l2
+                                if tag in cache_compartilhada.cache:
+                                    cache_compartilhada.hit += 1
+                                else: 
+                                    cache_compartilhada.miss += 1
+                                cache_compartilhada.alocar(tag, politica) # write-back na l2
+                                
                                 arquivo_saida.write(f"SNOOP: Vizinho {vizinho.id} tinha 'M' -> Fez Flush antes de Invalidar\n")
                             
-                            vizinho.atualizar_linha(operacao, tag, 'I') 
+                            vizinho.atualizar_linha(operacao, tag, 'I', politica, cache_compartilhada) 
                             arquivo_saida.write(f"SNOOP: Invalidando cópia do processador {vizinho.id}\n")
 
                 if caches_privadas[processador].buscar(operacao, tag) is None:
                     if tag not in cache_compartilhada.cache:
                          cache_compartilhada.miss += 1
-                         cache_compartilhada.alocar(tag)
+                         cache_compartilhada.alocar(tag, politica)
                     else:
                          cache_compartilhada.hit += 1
 
-                caches_privadas[processador].atualizar_linha(operacao, tag, 'M')
+                caches_privadas[processador].atualizar_linha(operacao, tag, 'M', politica, cache_compartilhada)
             case _:
                 raise ValueError("Instrução inválida")
         imprimirCaches(caches_privadas, cache_compartilhada, arquivo_saida)
@@ -317,7 +388,7 @@ def main():
         return
 
     # executa o simulador
-    protocolo_msi(lista_instrucoes, caches_privadas, cache_compartilhada, log)
+    protocolo_msi(lista_instrucoes, caches_privadas, cache_compartilhada, politica, log)
 
     log.close()
 
