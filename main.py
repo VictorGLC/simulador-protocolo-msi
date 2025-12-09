@@ -12,11 +12,15 @@ class CacheCompartilhada:
         self.hit = 0
         self.miss = 0
 
-    def inserir(self, endereco: str):
-        """insere um novo endereco na cache compartilhada"""
+    def alocar(self, tag: str):
+        """aloca uma nova tag na cache compartilhada"""
+
+        if tag in self.cache:
+            return  # já está na cache
+
         for i in range(len(self.cache)):
             if self.cache[i] is None:
-                self.cache[i] = endereco
+                self.cache[i] = tag
                 return
 
         # implementar politica de substituicao
@@ -52,21 +56,21 @@ class CachePrivada:
                 return estado # retorna 'S' ou 'M'
         return None # miss
 
-    def inserir(self, operacao: int, endereco: str, novo_estado: str):
-        """insere um novo endereco ou atualiza o estado de um existente"""
+    def atualizar_linha(self, operacao: int, tag: str, novo_estado: str):
+        """insere uma nova tag ou atualiza o estado de uma existente"""
 
         cache = self._get_cache(operacao)
         
         # se existe apenas atualiza o estado
         for i in range(len(cache)):
-            if cache[i][0] == endereco:
-                cache[i] = (endereco, novo_estado)
+            if cache[i][0] == tag:
+                cache[i] = (tag, novo_estado)
                 return
 
         # se não existe procura estado invalido
         for i in range(len(cache)):
             if cache[i][1] == 'I':
-                cache[i] = (endereco, novo_estado)
+                cache[i] = (tag, novo_estado)
                 return
 
         # implementar politica de substituicao
@@ -82,14 +86,37 @@ def calcular_tag(endereco_hex: str, tamanho_linha: int) -> str:
 
 def le_configuracoes(arq_config):
     """lê as configurações do arquivo e retorna uma tupla com os valores""" 
-    
-    tam_linha = int(arq_config.readline().strip())
-    n_linhas_cache_compartilhada = int(arq_config.readline().strip())
-    n_linhas_vizinho = int(arq_config.readline().strip())
-    n_processadores = int(arq_config.readline().strip())
-    politica = arq_config.readline().strip()
-    
-    return (tam_linha, n_linhas_cache_compartilhada, n_linhas_vizinho, n_processadores, politica)
+    try:
+        arq_linhas = arq_config.readlines()
+        linhas = [line.strip() for line in arq_linhas if line.strip()]
+
+        if len(linhas) < 5:
+            raise ValueError(f"O arquivo deve ter 5 parâmetros. Encontrados apenas {len(linhas)}.")
+        
+        tam_linha = int(linhas[0])
+        n_linhas_cache_compartilhada = int(linhas[1])
+        n_linhas_cache_privada = int(linhas[2])
+        n_processadores = int(linhas[3])
+        politica = linhas[4].lower()
+
+        if tam_linha <= 0:
+            raise ValueError(f"O tamanho da linha ({tam_linha}) deve ser maior que zero.")
+        if n_linhas_cache_compartilhada <= 0:
+            raise ValueError(f"O número de linhas da L2 ({n_linhas_cache_compartilhada}) deve ser maior que zero.")
+        if n_linhas_cache_privada <= 0:
+            raise ValueError(f"O número de linhas da L1 ({n_linhas_cache_privada}) deve ser maior que zero.")
+        if n_processadores <= 0:
+            raise ValueError(f"O número de processadores ({n_processadores}) deve ser maior que zero.")
+
+        if n_linhas_cache_privada >= n_linhas_cache_compartilhada:
+            raise ValueError(f"Violação de Hierarquia de Memória: A L1 deve ser estritamente menor que a L2.\n")
+
+        if politica not in ['lru', 'fifo']:
+            raise ValueError(f"Aviso: Política '{politica}' desconhecida.")
+
+        return (tam_linha, n_linhas_cache_compartilhada, n_linhas_cache_privada, n_processadores, politica)
+    except Exception as e:
+        raise ValueError(f"Erro inesperado na leitura do arquivo: {e}")
 
 def trata_instrucoes(arq_instrucoes):
     """lê as instruções do arquivo e retorna uma lista de tuplas (id_processador, operacao, endereco)"""
@@ -97,10 +124,15 @@ def trata_instrucoes(arq_instrucoes):
     instrucoes_lst = []
     for linha in arq_instrucoes:
         partes = linha.strip().split()
-        id_processador = int(partes[0])
-        operacao = int(partes[1])
-        endereco = partes[2]
-        instrucoes_lst.append((id_processador, operacao, endereco))
+        if len(partes) != 3:
+            raise ValueError(f"Aviso: Formato inválido na linha: {linha.strip()}")
+        try:
+            id_processador = int(partes[0])
+            operacao = int(partes[1])
+            endereco = partes[2]
+            instrucoes_lst.append((id_processador, operacao, endereco))
+        except ValueError:
+            raise ValueError(f"Aviso: Valores inválidos na linha: {linha.strip()}")
     return instrucoes_lst
 
 def imprimirCaches(caches_privadas: list[CachePrivada], cache_compartilhada: CacheCompartilhada, arquivo_saida):
@@ -160,7 +192,7 @@ def protocolo_msi(instrucoes: list[tuple[int, int, str]], caches_privadas: list[
                 arquivo_saida.write(f"Processador {processador} lê instrução em {endereco}\n")
                 
                 if caches_privadas[processador].buscar(operacao, tag) is not None: # busca na l1 de instrucao
-                    caches_privadas[processador].inserir(operacao, tag, 'S') # atualiza estado para 'S'
+                    caches_privadas[processador].atualizar_linha(operacao, tag, 'S') # atualiza estado para 'S'
                     caches_privadas[processador].hit_instrucao += 1
                 else:
                     caches_privadas[processador].miss_instrucao += 1
@@ -170,15 +202,15 @@ def protocolo_msi(instrucoes: list[tuple[int, int, str]], caches_privadas: list[
                         cache_compartilhada.hit += 1 # hit na cache compartilhada
                     else:
                         cache_compartilhada.miss += 1 # miss na cache compartilhada
-                        cache_compartilhada.inserir(tag) # insere na cache compartilhada, simula trazer da memória principal
+                        cache_compartilhada.alocar(tag) # insere na cache compartilhada, simula trazer da memória principal
 
-                    caches_privadas[processador].inserir(operacao, tag, 'S') # insere na cache de instrucao
+                    caches_privadas[processador].atualizar_linha(operacao, tag, 'S') # insere na cache de instrucao
                     
             case 2:
                 arquivo_saida.write(f"Processador {processador} lê dado em {endereco}\n")
 
                 if caches_privadas[processador].buscar(operacao, tag) is not None: # busca na l1 de dados
-                    caches_privadas[processador].inserir(operacao, tag, 'S')
+                    caches_privadas[processador].atualizar_linha(operacao, tag, 'S')
                     caches_privadas[processador].hit_dados += 1
                 else:
                     caches_privadas[processador].miss_dados += 1
@@ -189,8 +221,8 @@ def protocolo_msi(instrucoes: list[tuple[int, int, str]], caches_privadas: list[
                             estado = vizinho.buscar(operacao, tag) # busca na l1 de dados do vizinho
                             
                             if estado == 'M': # se for M precisa fazer write-back na l2
-                                cache_compartilhada.inserir(tag) # vizinho faz write-back na l2
-                                vizinho.inserir(operacao, tag, 'S') # vizinho vira shared
+                                cache_compartilhada.alocar(tag) # vizinho faz write-back na l2
+                                vizinho.atualizar_linha(operacao, tag, 'S') # vizinho vira shared
                                 veio_do_vizinho = True
                                 arquivo_saida.write(f"Snooping: Vizinho {vizinho.id} 'M' -> 'S'\n")
                     
@@ -200,9 +232,9 @@ def protocolo_msi(instrucoes: list[tuple[int, int, str]], caches_privadas: list[
                             cache_compartilhada.hit += 1
                         else:
                             cache_compartilhada.miss += 1
-                            cache_compartilhada.inserir(tag)
+                            cache_compartilhada.alocar(tag)
 
-                    caches_privadas[processador].inserir(operacao, tag, 'S')
+                    caches_privadas[processador].atualizar_linha(operacao, tag, 'S')
             case 3:
                 arquivo_saida.write(f"Processador {processador} escreve dado em {endereco}\n")
 
@@ -210,22 +242,27 @@ def protocolo_msi(instrucoes: list[tuple[int, int, str]], caches_privadas: list[
                     caches_privadas[processador].hit_dados += 1
                 else:
                     caches_privadas[processador].miss_dados += 1
-                    
-                    if tag not in cache_compartilhada.cache: # garante que esta em l2 antes de tomar posse
-                         cache_compartilhada.miss += 1
-                         cache_compartilhada.inserir(tag)
-                    else:
-                         cache_compartilhada.hit += 1
 
                 # snooping (invalidate)
                 for vizinho in caches_privadas:
                     if vizinho.id != processador:
-                        if vizinho.buscar(operacao, tag) is not None:
-                            vizinho.inserir(operacao, tag, 'I')
-                            arquivo_saida.write(f"Snooping: Invalidando cópia do processador {vizinho.id}\n")
-                
-                # atualiza local para 'M'
-                caches_privadas[processador].inserir(operacao, tag, 'M')
+                        estado_vizinho = vizinho.buscar(operacao, tag)
+                        if estado_vizinho is not None:
+                            if estado_vizinho == 'M': # se vizinho tinha dado modificado, precisa salvar na l2 antes de invalidar
+                                cache_compartilhada.alocar(tag) # write-back na l2
+                                arquivo_saida.write(f"SNOOP: Vizinho {vizinho.id} tinha 'M' -> Fez Flush antes de Invalidar\n")
+                            
+                            vizinho.atualizar_linha(operacao, tag, 'I') 
+                            arquivo_saida.write(f"SNOOP: Invalidando cópia do processador {vizinho.id}\n")
+
+                if caches_privadas[processador].buscar(operacao, tag) is None:
+                    if tag not in cache_compartilhada.cache:
+                         cache_compartilhada.miss += 1
+                         cache_compartilhada.alocar(tag)
+                    else:
+                         cache_compartilhada.hit += 1
+
+                caches_privadas[processador].atualizar_linha(operacao, tag, 'M')
             case _:
                 raise ValueError("Instrução inválida")
         imprimirCaches(caches_privadas, cache_compartilhada, arquivo_saida)
