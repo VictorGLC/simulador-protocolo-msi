@@ -24,8 +24,8 @@ class CacheCompartilhada:
 class CachePrivada:
     def __init__(self, id: int, tamanho_linha: int, num_linhas: int):
         self.tamanho_linha = tamanho_linha
-        self.cache_instrucao = [(None, "I")] * (num_linhas)
-        self.cache_dados = [(None, "I")] * (num_linhas)
+        self.cache_instrucao = [(None, "I") for _ in range(num_linhas)]
+        self.cache_dados = [(None, "I") for _ in range(num_linhas)]
         self.hit_instrucao = 0
         self.miss_instrucao = 0
         self.hit_dados = 0
